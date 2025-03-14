@@ -1,0 +1,4 @@
+name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
+api_key|object|51de7e27969501de
+.Random.seed|object|a8935a7a4627dddd
+videoclub_catalogo|stem||d483a0ed0210eab6|2c530c1562a7fbd1|782802695||t20161.2507602781s||0|rds|local|vector|||0.348||could not find function read_catalogo
