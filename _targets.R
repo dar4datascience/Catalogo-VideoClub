@@ -5,17 +5,21 @@
 
 # Load packages required to define the pipeline:
 library(targets)
-# library(tarchetypes) # Load other packages as needed.
+library(tarchetypes) # Load other packages as needed.
 
 # Set target options:
 tar_option_set(
   packages = c("tibble",
                "httr2",
                "stringr",
+               "stringdist",
+               "uuid",
+               "stringr",
                "tidyr",
                "purrr",
                "dplyr",
-               "furrr") # Packages that your targets need for their tasks.
+               "furrr"), # Packages that your targets need for their tasks.
+  cue = tar_cue("thorough")
   # format = "qs", # Optionally set the default storage format. qs is fast.
   #
   # Pipelines that take a long time to run may benefit from
@@ -64,5 +68,25 @@ list(
   tar_target(
     name = movies_search_results,
     command = search_movies(videoclub_catalogo, api_key)
+  ),
+  tar_target(
+    name = tidy_movie_search,
+    command = tidy_up_search_results(videoclub_catalogo, movies_search_results)
+  ),
+  tar_target(
+    name = movies_with_no_hits,
+    command = account_for_movies_not_found(videoclub_catalogo, tidy_movie_search)
+  ),
+  tar_target(
+    name = video_club_clean_catalogue,
+    command = disambiguate_movies_found(tidy_movie_search)
+  ),
+  # make quarto report to visualize found movies 
+  # and not found movies, 
+  # both downloadable
+  # try to leverage WASM to allow user to link missing movies and download results
+  tarchetypes::tar_quarto(
+    video_club_catalogue_report,
+    "videoclub_catalogue_link_results.qmd"
   )
 )

@@ -6,6 +6,113 @@ library(tidyr)
 library(furrr)
 
 
+# Safely Search -----------------------------------------------------------
+
+tidy_up_search_results <- function(videoclub_catalogo, movies_search_results){
+  
+  found_movies <- movies_search_results |> 
+    map(
+    ~pluck(.x, 'result')
+    ) |> 
+    list_rbind()
+  
+  # unnest and only keep those with exact match names
+    agg_movie_catalogo <- videoclub_catalogo |> 
+      left_join(found_movies,
+                join_by(titulo_disponible == movie_name ,
+                         uuid))
+    
+    return(agg_movie_catalogo)
+}
+
+account_for_movies_not_found <- function(videoclub_catalogo, tidy_movie_search){
+  
+  found_movies <- tidy_movie_search |> 
+    tidyr::unnest(cols = search_results)
+  
+  movies_with_no_search_results <- videoclub_catalogo |> 
+    anti_join(found_movies,
+              join_by( titulo_disponible,
+                       uuid))
+  
+  return(movies_with_no_search_results)
+  
+}
+
+disambiguate_movies_found <- function(tidy_movie_search){
+  
+  criterion_catalogue <- tidy_movie_search |> 
+    tidyr::unnest(cols = search_results) |> 
+    mutate(
+      title_is_same = titulo_disponible == title
+    )
+
+  
+  plan(multisession, workers = 6)
+  
+  one_catalogue <- criterion_catalogue |> 
+    mutate(
+      movie_name_similitude = stringdist(titulo_disponible, title, method = "lv") 
+    ) |> 
+    filter(
+      title_is_same == TRUE | movie_name_similitude < 5
+    ) 
+  
+  directors_catalogue <- one_catalogue |> 
+    distinct(imdb_id) |>
+    pull() |> 
+    future_map(
+      ~ fetch_movie_metadata(.x, Sys.getenv("OMDB_API_KEY"))
+      ) |> 
+    list_rbind() |> 
+    distinct()
+  # NEXT IS TO DISAMBIGUAGTE BY FETCHING THE DIRECTOR INFORMATION FOR EACH MOVIE
+  
+  # update to use stringdist on title because some movies dont have director but their title is obvious
+  
+  aug_one_catalogue <- one_catalogue |> 
+    left_join(directors_catalogue,
+              join_by(imdb_id)) |> 
+    mutate(
+      nombre_director = if_else(nombre_director == "NA NA", director, nombre_director)
+    ) |> 
+    mutate(
+      director = stringr::str_to_upper(director),
+      director_is_same = str_detect(director, nombre_director),
+      director_similitude = stringdist(nombre_director, director, method = "lv")  # Levenshtein distance
+    ) |> 
+    filter(
+      director_is_same == TRUE | director_similitude < 5 
+    ) |> 
+    select(
+      uuid,
+      year,
+      imdb_id,
+      titulo_disponible
+    )
+  
+  video_club_clean_catalogue <- tidy_movie_search |> 
+    left_join(aug_one_catalogue,
+              join_by(uuid,
+                      titulo_disponible)) |> 
+    select(!search_results) |> 
+    filter(!is.na(imdb_id))
+  
+  return(video_club_clean_catalogue)
+}
+
+clean_up_movie_title <- function(title_movie){
+  clean_movie_title <- title_movie |> 
+    str_remove_all("\\( \\d{1} \\)") |>
+    str_remove_all("\\( \\d{2} \\)") |> 
+    str_remove_all("\\( \\d{3} \\)") |> 
+    str_remove_all("\\( \\d{4} \\)") |> 
+    #str_remove_all("'") |> 
+    str_squish()
+  
+  return(clean_movie_title)
+}
+
 # Read Catalogo -----------------------------------------------------------
 read_catalogo <- function(){
   catalogo_peliculas <- readr::read_csv("peliculas_ant.csv") |>
@@ -21,25 +128,49 @@ read_catalogo <- function(){
       ape_dir
     ) |>
     mutate(
-      nombre_director = paste(nom_dir, ape_dir)
+      nombre_director = paste(nom_dir, ape_dir),
+      titulo_disponible = coalesce(tituloi, titulo, "Sin datos"), 
+      titulo_disponible = map_chr(
+        titulo_disponible,
+        clean_up_movie_title
+      ),
+      uuid = uuid::UUIDgenerate(n = nrow(catalogo_peliculas))
     ) |> 
     select(
-      titulo,
-      tituloi
-      nombre_director
-    )
+      titulo_disponible,
+      nombre_director,
+      uuid
+    ) |> 
+    filter( # quitar cuando no se tiene titulo disponible
+      titulo_disponible != "Sin datos", # segun yo solo quita 1
+      stringr::str_length(titulo_disponible) > 1
+    ) |> 
+    distinct()
+  
+  # check
+  
+  # nrow(zoomed_catalogo_peliculas)
   
   return(zoomed_catalogo_peliculas)
 }
 
 # Search Movies -----------------------------------------------------------
 # Sub-function to search for movies based on name
-search_movie <- function(movie_name, api_key) {
+search_movie <- function(movie_name, uuid, api_key) {
   
-  movie_name <- gsub(" ", "+", movie_name)  # transform spaces to '+'
+  #print(movie_data)
+  
+  Sys.sleep(1)
+  
+  # cli::cli_inform(
+  #   glue::glue("Searching for {movie_name}")
+  # )
+  
+  
+  clean_movie_name <- gsub(" ", "+", movie_name)  # transform spaces to '+'
   
   # Build the search URL
-  movie_url <- paste0("http://www.omdbapi.com/?s=", movie_name, "&apikey=", api_key)
+  movie_url <- paste0("http://www.omdbapi.com/?s=", clean_movie_name, "&apikey=", api_key)
   
   # Perform the request and extract relevant data
   response <- request(movie_url) |>
@@ -53,30 +184,33 @@ search_movie <- function(movie_name, api_key) {
       ~ tibble(
         title = str_to_upper(.x$Title),
         year = .x$Year,
-        poster = .x$Poster,
+        #poster = .x$Poster,
         imdb_id = .x$imdbID
       )
     ) |>
-    list_rbind() |>
-    filter(poster != 'N/A')
+    list_rbind() 
   
   nested_df <- clean_response |> 
     mutate(
-      movie_name = movie_name
+      movie_name = movie_name,
+      uuid = uuid
     ) |> 
-    group_by(movie_name) |> 
+    group_by(movie_name, uuid) |> 
     tidyr::nest(.key = "search_results")
   
   return(nested_df)
 }
 
-search_movies <- function(zoomed_catalogo, api_key){
+search_movies <- function(videoclub_catalogo, api_key){
   plan(multisession, workers = 6)
   
-  searched_movies <- future_map(zoomed_catalogo,
-                                ~ search_movie(.x, api_key)
-  ) |> 
-    list_rbind()
+  safely_search_movie <- safely(search_movie)
+  
+  searched_movies <- videoclub_catalogo |> 
+    select(titulo_disponible,
+           uuid) |> 
+    future_pmap(~ safely_search_movie(.x, .y, api_key)
+  ) 
   
 
   return(searched_movies)  
@@ -95,10 +229,24 @@ fetch_movie_metadata <- function(imdb_id, api_key) {
     resp_body_json()
   
   # Convert to a data frame
-  imdb_df <- as.data.frame(imdb_response)
+  imdb_df <- tibble::as_tibble(imdb_response) |> 
+    janitor::clean_names() |> 
+    select(
+      director,
+           actors,
+           type
+    ) |> 
+    mutate(
+      imdb_id = imdb_id,
+      director = if_else(director == "N/A", "Not found", director),
+      director = coalesce(director, "Not found") # might be redudntdat
+    ) |> 
+    distinct()
   
   return(imdb_df)
 }
+
+
 
 
 # Combined Flow -----------------------------------------------------------

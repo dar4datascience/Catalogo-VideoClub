@@ -1,0 +1,30 @@
+---
+title: "Videoclub Catalogo Link Resultados"
+format: 
+ html:
+   theme: cyborg
+---
+
+```{r}
+#| output: false
+
+video_club_clean_catalogue <- targets::tar_read(video_club_clean_catalogue)
+movies_with_no_hits <- targets::tar_read(movies_with_no_hits)
+
+ojs_define(video_club_clean_catalogue_data = video_club_clean_catalogue)
+ojs_define(movies_with_no_hits_data = movies_with_no_hits)
+```
+
+## Peliculas Encontradas
+
+```{ojs}
+viewof search1 = Inputs.search(transpose(video_club_clean_catalogue_data))
+Inputs.table(search1)
+```
+
+## Peliculas No Encontradas
+
+```{ojs}
+viewof search2 = Inputs.search(transpose(movies_with_no_hits_data))
+Inputs.table(search2)
+```
