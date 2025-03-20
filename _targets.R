@@ -74,10 +74,6 @@ list(
     command = tidy_up_search_results(videoclub_catalogo, movies_search_results)
   ),
   tar_target(
-    name = movies_with_no_hits,
-    command = account_for_movies_not_found(videoclub_catalogo, tidy_movie_search)
-  ),
-  tar_target(
     name = one_catalogue,
     command = build_one_catalogue(tidy_movie_search)
   ),
@@ -88,6 +84,10 @@ list(
   tar_target(
     name = video_club_clean_catalogue,
     command = augment_and_clean_one_catalogue(tidy_movie_search, one_catalogue, directors_catalogue)
+  ),
+  tar_target(
+    name = movies_with_no_hits,
+    command = account_for_movies_not_found(videoclub_catalogo, video_club_clean_catalogue)
   ),
   # make quarto report to visualize found movies 
   # and not found movies, 

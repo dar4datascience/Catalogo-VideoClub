@@ -28,12 +28,14 @@ tidy_up_search_results <- function(videoclub_catalogo, movies_search_results){
 account_for_movies_not_found <- function(videoclub_catalogo, tidy_movie_search){
   
   found_movies <- tidy_movie_search |> 
-    tidyr::unnest(cols = search_results)
+    distinct(titulo_disponible,
+             uuid)
   
   movies_with_no_search_results <- videoclub_catalogo |> 
     anti_join(found_movies,
               join_by( titulo_disponible,
-                       uuid))
+                       uuid)) 
+    
   
   return(movies_with_no_search_results)
   
@@ -55,7 +57,9 @@ augment_and_clean_one_catalogue <- function(tidy_movie_search, one_catalogue, di
       uuid,
       year,
       imdb_id,
-      titulo_disponible
+      titulo_disponible,
+      plot,
+      poster
     )
   
   video_club_clean_catalogue <- tidy_movie_search |> 
@@ -152,7 +156,9 @@ disambiguate_movies_found <- function(tidy_movie_search){
       uuid,
       year,
       imdb_id,
-      titulo_disponible
+      titulo_disponible,
+      plot,
+      poster
     )
   
   video_club_clean_catalogue <- tidy_movie_search |> 
@@ -298,7 +304,9 @@ fetch_movie_metadata <- function(imdb_id, api_key) {
     select(
       director,
            actors,
-           type
+           type,
+      plot,
+      poster
     ) |> 
     mutate(
       imdb_id = imdb_id,
@@ -374,3 +382,38 @@ search_n_fetch_movie_metadata <- function(movie_name, api_key) {
 
 
 # save result!
+
+
+# Table -------------------------------------------------------------------
+
+
+
+#' @export
+tbl_movies_found <- function(movies_found) {
+  movies_found |>
+    dplyr::select(title, year, plot, poster) |>
+    reactable(
+      theme = fivethirtyeight(centered = TRUE),
+      selection = "single",
+      onClick = "select",
+      striped = TRUE,
+      pagination = FALSE,
+      searchable = TRUE,
+      defaultColDef = colDef(align = 'center'),
+      columns = list(
+        poster = colDef(
+          name = 'Poster',
+          maxWidth = 200,
+          cell = embed_img(movies_found$poster,
+                           height = 200,
+                           width = 235,
+                           horizontal_align = 'center')
+        ),
+        title = colDef(maxWidth = 150, name = 'Movie'),
+        year = colDef(maxWidth = 50,
+                      name = 'Released'),
+        plot = colDef(minWidth = 150,
+                      name = 'Plot')
+      )
+    )
+}

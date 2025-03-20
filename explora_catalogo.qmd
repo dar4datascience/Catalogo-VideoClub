@@ -1,0 +1,16 @@
+---
+title: "Explora Catalogo"
+---
+
+## Explora
+
+```{r reactbl}
+library(reactablefmtr)
+
+targets::tar_source()
+
+video_club_clean_catalogue <- targets::tar_read(video_club_clean_catalogue)
+
+tbl_movies_found(video_club_clean_catalogue)
+```
+
