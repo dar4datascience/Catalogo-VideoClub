@@ -1,0 +1,23 @@
+[
+  {
+    "objectID": "videoclub_catalogue_link_results.html",
+    "href": "videoclub_catalogue_link_results.html",
+    "title": "Videoclub Catalogo Link Resultados",
+    "section": "",
+    "text": "viewof search1 = Inputs.search(transpose(video_club_clean_catalogue_data))\nInputs.table(search1)"
+  },
+  {
+    "objectID": "videoclub_catalogue_link_results.html#peliculas-encontradas",
+    "href": "videoclub_catalogue_link_results.html#peliculas-encontradas",
+    "title": "Videoclub Catalogo Link Resultados",
+    "section": "",
+    "text": "viewof search1 = Inputs.search(transpose(video_club_clean_catalogue_data))\nInputs.table(search1)"
+  },
+  {
+    "objectID": "videoclub_catalogue_link_results.html#peliculas-no-encontradas",
+    "href": "videoclub_catalogue_link_results.html#peliculas-no-encontradas",
+    "title": "Videoclub Catalogo Link Resultados",
+    "section": "Peliculas No Encontradas",
+    "text": "Peliculas No Encontradas\n\nviewof search2 = Inputs.search(transpose(movies_with_no_hits_data))\nInputs.table(search2)"
+  }
+]
