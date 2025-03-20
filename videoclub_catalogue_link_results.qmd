@@ -1,8 +1,7 @@
 ---
 title: "Videoclub Catalogo Link Resultados"
-format: 
- html:
-   theme: cyborg
+execute:
+  echo: false
 ---
 
 ```{r}

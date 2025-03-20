@@ -1,0 +1,15 @@
+project:
+  type: website
+
+website:
+  title: "Catalogo Videoclub"
+  navbar:
+    left:
+      - href: videoclub_catalogue_link_results.qmd
+        text: Home
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true

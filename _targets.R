@@ -78,15 +78,22 @@ list(
     command = account_for_movies_not_found(videoclub_catalogo, tidy_movie_search)
   ),
   tar_target(
+    name = one_catalogue,
+    command = build_one_catalogue(tidy_movie_search)
+  ),
+  tar_target(
+    name = directors_catalogue,
+    command = furry_fetch_director_info(one_catalogue)
+  ),
+  tar_target(
     name = video_club_clean_catalogue,
-    command = disambiguate_movies_found(tidy_movie_search)
+    command = augment_and_clean_one_catalogue(tidy_movie_search, one_catalogue, directors_catalogue)
   ),
   # make quarto report to visualize found movies 
   # and not found movies, 
   # both downloadable
   # try to leverage WASM to allow user to link missing movies and download results
   tarchetypes::tar_quarto(
-    video_club_catalogue_report,
-    "videoclub_catalogue_link_results.qmd"
+    video_club_catalogue_report
   )
 )

@@ -39,6 +39,68 @@ account_for_movies_not_found <- function(videoclub_catalogo, tidy_movie_search){
   
 }
 
+augment_and_clean_one_catalogue <- function(tidy_movie_search, one_catalogue, directors_catalogue) {
+  aug_one_catalogue <- one_catalogue |> 
+    left_join(directors_catalogue, by = "imdb_id") |> 
+    mutate(
+      nombre_director = if_else(nombre_director == "NA NA", director, nombre_director),
+      director = stringr::str_to_upper(director),
+      director_is_same = stringr::str_detect(director, nombre_director),
+      director_similitude = stringdist::stringdist(nombre_director, director, method = "lv")  # Levenshtein distance
+    ) |> 
+    filter(
+      director_is_same == TRUE | director_similitude < 5 
+    ) |> 
+    select(
+      uuid,
+      year,
+      imdb_id,
+      titulo_disponible
+    )
+  
+  video_club_clean_catalogue <- tidy_movie_search |> 
+    left_join(aug_one_catalogue, by = c("uuid", "titulo_disponible")) |> 
+    select(-search_results) |> 
+    filter(!is.na(imdb_id))
+  
+  return(video_club_clean_catalogue)
+}
+
+
+furry_fetch_director_info <- function(one_catalogue) {
+  future::plan(future::multisession, workers = 6)
+  
+  directors_catalogue <- one_catalogue |> 
+    distinct(imdb_id) |>
+    pull() |> 
+    furrr::future_map(
+      ~ fetch_movie_metadata(.x, Sys.getenv("OMDB_API_KEY"))
+    ) |> 
+    dplyr::bind_rows() |> 
+    distinct()
+  
+  return(directors_catalogue)
+}
+
+build_one_catalogue <- function(tidy_movie_search) {
+  criterion_catalogue <- tidy_movie_search |> 
+    tidyr::unnest(cols = search_results) |> 
+    mutate(
+      title_is_same = titulo_disponible == title
+    )
+  
+  one_catalogue <- criterion_catalogue |> 
+    mutate(
+      movie_name_similitude = stringdist::stringdist(titulo_disponible, title, method = "lv") 
+    ) |> 
+    filter(
+      title_is_same == TRUE 
+      #| movie_name_similitude < 5 this can cause duplicates
+    )
+  
+  return(one_catalogue)
+}
+
 disambiguate_movies_found <- function(tidy_movie_search){
   
   criterion_catalogue <- tidy_movie_search |> 
@@ -46,17 +108,19 @@ disambiguate_movies_found <- function(tidy_movie_search){
     mutate(
       title_is_same = titulo_disponible == title
     )
-
-  
-  plan(multisession, workers = 6)
   
   one_catalogue <- criterion_catalogue |> 
     mutate(
       movie_name_similitude = stringdist(titulo_disponible, title, method = "lv") 
     ) |> 
-    filter(
+    filter( #stringr dif causes movie 2 
       title_is_same == TRUE | movie_name_similitude < 5
     ) 
+
+  
+  plan(multisession, workers = 6)
+  
+
   
   directors_catalogue <- one_catalogue |> 
     distinct(imdb_id) |>
