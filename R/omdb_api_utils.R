@@ -391,7 +391,7 @@ search_n_fetch_movie_metadata <- function(movie_name, api_key) {
 #' @export
 tbl_movies_found <- function(movies_found) {
   movies_found |>
-    dplyr::select(title, year, plot, poster) |>
+    dplyr::select(titulo_disponible, year, plot, poster) |>
     reactable(
       theme = fivethirtyeight(centered = TRUE),
       selection = "single",
@@ -409,7 +409,7 @@ tbl_movies_found <- function(movies_found) {
                            width = 235,
                            horizontal_align = 'center')
         ),
-        title = colDef(maxWidth = 150, name = 'Movie'),
+        titulo_disponible = colDef(maxWidth = 150, name = 'Movie'),
         year = colDef(maxWidth = 50,
                       name = 'Released'),
         plot = colDef(minWidth = 150,
