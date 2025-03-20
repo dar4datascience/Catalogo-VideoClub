@@ -13,7 +13,7 @@ search_movie|function|5ad9c7574853b629
 api_key|object|51de7e27969501de
 fetch_movie_metadata|function|3124d5c087ad9022
 build_one_catalogue|function|9f62cf7132e96f1d
-.Random.seed|object|16e6b68efbcaedc2
+.Random.seed|object|3ac234b455a7498f
 tbl_movies_found|function|4eb2d937a4f4a326
 augment_and_clean_one_catalogue|function|59b64fb58e99f3ec
 read_catalogo|function|24c9d4f7f26bbe69
@@ -21,4 +21,4 @@ search_movies|function|d009219032fc29f0
 furry_fetch_director_info|function|2e498940c571b70e
 disambiguate_movies_found|function|f28dd62a9a2988ed
 search_n_fetch_movie_metadata|function|871afe5d2808c28d
-video_club_catalogue_report|stem|f548ce1000b9a4dd|98e06b2de1e570e1|2db6041a12419a17|-1261095629|_site*videoclub_catalogue_link_results.qmd*_quarto.yml|t20167.1818394773s||4411028|file|local|vector|||8.639|| Error running quarto cli.ℹ Rerun with quiet  FALSE to see the full error message.Caused by error System command quarto failed
+video_club_catalogue_report|stem|0134886891ce6e99|98e06b2de1e570e1|2db6041a12419a17|-1261095629|_site*explora_catalogo.qmd*videoclub_catalogue_link_results.qmd*_quarto.yml|t20167.2123819153s|s11082776b|11082776|file|local|vector|||26.231||

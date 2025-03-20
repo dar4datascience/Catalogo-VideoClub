@@ -1,5 +1,8 @@
 ---
 title: "Explora Catalogo"
+execute:
+  echo: false
+  warning: false
 ---
 
 ## Explora
@@ -12,13 +15,9 @@ targets::tar_source()
 
 video_club_clean_catalogue <- targets::tar_read(video_club_clean_catalogue) |> 
   mutate(
-    poster = coalesce(poster,"No Poster")
+    poster = if_else(poster == "N/A","https://github.com/dar4datascience/Demo-R-Access/blob/main/noposter.png", poster)
   )
 
-missing_poster <- video_club_clean_catalogue |> 
-  filter(
-    poster == "No Poster"
-  )
   
 
 tbl_movies_found(video_club_clean_catalogue)
