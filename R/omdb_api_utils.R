@@ -59,7 +59,8 @@ augment_and_clean_one_catalogue <- function(tidy_movie_search, one_catalogue, di
       imdb_id,
       titulo_disponible,
       plot,
-      poster
+      poster,
+      genre
     )
   
   video_club_clean_catalogue <- tidy_movie_search |> 
@@ -306,7 +307,8 @@ fetch_movie_metadata <- function(imdb_id, api_key) {
            actors,
            type,
       plot,
-      poster
+      poster,
+      genre
     ) |> 
     mutate(
       imdb_id = imdb_id,
@@ -391,13 +393,13 @@ search_n_fetch_movie_metadata <- function(movie_name, api_key) {
 #' @export
 tbl_movies_found <- function(movies_found) {
   movies_found |>
-    dplyr::select(titulo_disponible, year, plot, poster) |>
+    dplyr::select(titulo_disponible, year, plot, poster, genre) |>
     reactable(
       theme = fivethirtyeight(centered = TRUE),
       selection = "single",
       onClick = "select",
       striped = TRUE,
-      pagination = FALSE,
+      pagination = TRUE,
       searchable = TRUE,
       defaultColDef = colDef(align = 'center'),
       columns = list(
@@ -409,11 +411,13 @@ tbl_movies_found <- function(movies_found) {
                            width = 235,
                            horizontal_align = 'center')
         ),
-        titulo_disponible = colDef(maxWidth = 150, name = 'Movie'),
+        titulo_disponible = colDef(maxWidth = 150, name = 'Pelicula'),
         year = colDef(maxWidth = 50,
                       name = 'Released'),
         plot = colDef(minWidth = 150,
-                      name = 'Plot')
+                      name = 'Trama'),
+        genre = colDef(minWidth = 100,
+                       name = "Generos")
       )
     )
 }

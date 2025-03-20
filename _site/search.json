@@ -19,19 +19,5 @@
     "title": "Videoclub Catalogo Link Resultados",
     "section": "Peliculas No Encontradas",
     "text": "Peliculas No Encontradas\n\nviewof search2 = Inputs.search(transpose(movies_with_no_hits_data))\nInputs.table(search2)"
-  },
-  {
-    "objectID": "explora_catalogo.html",
-    "href": "explora_catalogo.html",
-    "title": "Explora Catalogo",
-    "section": "",
-    "text": "Loading required package: reactable\n\n\n\nAttaching package: 'dplyr'\n\n\nThe following objects are masked from 'package:stats':\n\n    filter, lag\n\n\nThe following objects are masked from 'package:base':\n\n    intersect, setdiff, setequal, union\n\n\nLoading required package: future"
-  },
-  {
-    "objectID": "explora_catalogo.html#explora",
-    "href": "explora_catalogo.html#explora",
-    "title": "Explora Catalogo",
-    "section": "",
-    "text": "Loading required package: reactable\n\n\n\nAttaching package: 'dplyr'\n\n\nThe following objects are masked from 'package:stats':\n\n    filter, lag\n\n\nThe following objects are masked from 'package:base':\n\n    intersect, setdiff, setequal, union\n\n\nLoading required package: future"
   }
 ]
