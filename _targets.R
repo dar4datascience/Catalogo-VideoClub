@@ -11,6 +11,8 @@ library(tarchetypes) # Load other packages as needed.
 tar_option_set(
   packages = c("tibble",
                "httr2",
+               "googledrive",
+               "googlesheets4",
                "stringr",
                "stringdist",
                "uuid",
@@ -95,5 +97,10 @@ list(
   # try to leverage WASM to allow user to link missing movies and download results
   tarchetypes::tar_quarto(
     video_club_catalogue_report
+  ),
+  tar_target(
+    name = Upload2Sheets,
+    command = write_catalog_results_2_sheets(video_club_clean_catalogue,
+                                             movies_with_no_hits)
   )
 )

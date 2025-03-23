@@ -199,6 +199,7 @@ read_catalogo <- function(){
       ape_dir
     ) |>
     mutate(
+      titulo_videoclub = titulo,
       nombre_director = paste(nom_dir, ape_dir),
       titulo_disponible = coalesce(tituloi, titulo, "Sin datos"), 
       titulo_disponible = map_chr(
@@ -209,6 +210,7 @@ read_catalogo <- function(){
     ) |> 
     select(
       titulo_disponible,
+      titulo_videoclub,
       nombre_director,
       uuid
     ) |> 
