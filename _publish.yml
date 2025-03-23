@@ -1,4 +1,4 @@
 - source: project
   quarto-pub:
     - id: 1dae1204-0ab1-4002-ba77-b210da81a21f
-      url: 'https://dar4ds.quarto.pub/catalogo-videoclub'
+      url: https://dar4ds.quarto.pub/catalogo-videoclub
